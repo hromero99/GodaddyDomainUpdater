@@ -2,13 +2,16 @@ from dotenv import load_dotenv
 import os 
 import requests
 import json
+import logging
 
+logging.basicConfig(level=logging.INFO,filename="domainUpdater.log")
 
 def getMyCurrentIP() -> str:
     r = requests.get(url='https://ifconfig.me')
     if r.status_code == 200:
+        logging.info(f"Current ip {r.text}")
         return r.text
-    Exception(f"Error Making request {r.status_code}")
+    logging.error(f"Error Making request {r.status_code}")
 
 
 def updateGoDaddyIpDomain(ip: str, domain: str) -> int:
@@ -31,6 +34,11 @@ def updateGoDaddyIpDomain(ip: str, domain: str) -> int:
         },
         data=json.dumps([data_dict])
     )
+    if r.status_code == 200:
+        logging.info(f"{domain}'s IP has been updated to {ip}")
+    else:
+        logging.error(f"Error {r.status_code} updating {domain}'s IP")
+    
     return r.status_code
 
 def verifyChangeIP(currentIp:str, domain: str) -> int:
@@ -53,12 +61,16 @@ def verifyChangeIP(currentIp:str, domain: str) -> int:
 if __name__ == "__main__":
     load_dotenv()
     ip = getMyCurrentIP()
+    domain = os.environ.get("DOMAIN")
+    if  (os.environ.get("KEY") == "") or (os.environ.get("SECRET") == "") or (domain == ""):
+        print("You must set SECRET, KEY and DOMAIN env vars")
+        exit(-1)
     if ip:
-        ipChanged = verifyChangeIP(ip,"hromero99.club")
+        ipChanged = verifyChangeIP(ip,domain)
         if  ipChanged == 0:
-            updateGoDaddyIpDomain(ip,"hromero99.club")
+            updateGoDaddyIpDomain(ip,domain)
         elif ipChanged == -1:
-            print(f"Domain hromero99.club already has ip {ip}")
+            logging.info(f"Domain hromero99.club already has ip {ip}")
         else:
-            print(f"UnkownError {ipChanged}")
+            logging.error(f"UnkownError {ipChanged}")
         
