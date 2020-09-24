@@ -6,7 +6,8 @@ import logging
 
 logging.basicConfig(level=logging.INFO,filename="domainUpdater.log")
 
-def getMyCurrentIP() -> str:
+
+def get_current_local_ip() -> str:
     r = requests.get(url='https://ifconfig.me')
     if r.status_code == 200:
         logging.info(f"Current ip {r.text}")
@@ -14,9 +15,9 @@ def getMyCurrentIP() -> str:
     logging.error(f"Error Making request {r.status_code}")
 
 
-def updateGoDaddyIpDomain(ip: str, domain: str) -> int:
+def update_godaddy_a_register(ip: str, domain: str) -> int:
     data_dict = {
-            "data":ip,
+            "data": ip,
             "port": 80,
             "priority": 0,
             "ttl": 3600,
@@ -41,7 +42,8 @@ def updateGoDaddyIpDomain(ip: str, domain: str) -> int:
     
     return r.status_code
 
-def verifyChangeIP(currentIp:str, domain: str) -> int:
+
+def verify_change_ip(currentIp: str, domain: str) -> int:
     r = requests.get(
         url=f'https://api.godaddy.com/v1/domains/{domain.upper()}/records/A/%40',
         headers={
@@ -58,17 +60,18 @@ def verifyChangeIP(currentIp:str, domain: str) -> int:
             return 0
     return r.status_code
 
+
 if __name__ == "__main__":
     load_dotenv()
-    ip = getMyCurrentIP()
+    ip = get_current_local_ip()
     domain = os.environ.get("DOMAIN")
-    if  (os.environ.get("KEY") == "") or (os.environ.get("SECRET") == "") or (domain == ""):
+    if (os.environ.get("KEY") == "") or (os.environ.get("SECRET") == "") or (domain == ""):
         print("You must set SECRET, KEY and DOMAIN env vars")
         exit(-1)
     if ip:
-        ipChanged = verifyChangeIP(ip,domain)
+        ipChanged = verify_change_ip(ip, domain)
         if  ipChanged == 0:
-            updateGoDaddyIpDomain(ip,domain)
+            update_godaddy_a_register(ip, domain)
         elif ipChanged == -1:
             logging.info(f"Domain hromero99.club already has ip {ip}")
         else:
