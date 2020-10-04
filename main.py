@@ -1,10 +1,12 @@
+#!/usr/bin/env python3
 from dotenv import load_dotenv
 import requests
 import logging
-from api import GodaddyApi
 import argparse
+from domain import Domain
 
-logging.basicConfig(level=logging.INFO, filename="domainUpdater.log")
+logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
+                    datefmt='%Y-%m-%d:%H:%M:%S', level=logging.INFO, filename="domainUpdater.log")
 
 
 def get_current_local_ip() -> str:
@@ -17,7 +19,6 @@ def get_current_local_ip() -> str:
 
 if __name__ == "__main__":
     load_dotenv()
-    api_controller = GodaddyApi()
     parser = argparse.ArgumentParser(description="Update information about domain in Goddady web")
     required = parser.add_argument_group('required arguments')
     optional = parser.add_argument_group('optional arguments')
@@ -26,18 +27,12 @@ if __name__ == "__main__":
     required.add_argument("--domain", action="store", help="Domain to perform operations", required=True)
     required.add_argument("--ip", action="store", help="Ip Address to update information of DNS A register", required=True)
     optional.add_argument("--subdomain", action="store", help="Ip Address to update information of DNS A register")
-
     arguments = parser.parse_args()
+    domain = Domain(domain_name=arguments.domain)
 
     if arguments.createSubdomain:
-        api_controller.create_subdomain(
-            domain=arguments.domain,
-            subdomain=arguments.subdomain,
-            ip=arguments.ip
-        )
+        domain.create_subdomain(subdomain_name=arguments.subdomain, ip_address=arguments.ip)
+
     if arguments.update:
-        api_controller.update_godaddy_a_register(
-            ip=arguments.ip,
-            domain=arguments.domain
-        )
+        domain.update_register(register_name="@", register_new_value=arguments.ip, register_type="A")
 
