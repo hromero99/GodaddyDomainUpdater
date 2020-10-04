@@ -45,14 +45,14 @@ class GodaddyApi(object):
             logging.error(f"Error {r.status_code} updating {domain}'s IP")
         return r.status_code
 
-    def verify_change_ip(self, currentIp: str, domain: str) -> int:
+    def verify_change_ip(self, current_ip: str, domain: str) -> int:
         r = requests.get(
             url=f'https://api.godaddy.com/v1/domains/{domain.upper()}/records/A/%40',
             headers=self.headers
         )
         if r.status_code == 200:
             body = json.loads(r.text)
-            if currentIp == body[0].get("data"):
+            if current_ip == body[0].get("data"):
                 return -1
             else:
                 return 0
@@ -62,7 +62,7 @@ class GodaddyApi(object):
         # Create A register inside Given domain to create a new subdomain
         data_dict = {
             "type": 'A',
-            "name": subdomain.strip(domain),
+            "name": subdomain,
             "data": ip,
             "ttl": 3600,
         }
@@ -75,3 +75,13 @@ class GodaddyApi(object):
             logging.info(f"Created subdomain {subdomain} for domain {domain} with ip {ip}")
         else:
             logging.error(f"Error creating subdomain {subdomain} {r.text}")
+
+    def get_domain_info(self, domain: str):
+        r = requests.get(
+            url=f"{self.url}/{domain}/records",
+            headers=self.headers
+        )
+        if r.status_code != 200:
+            return None
+        else:
+            return r.text
